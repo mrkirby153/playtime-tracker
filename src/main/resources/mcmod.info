@@ -1,0 +1,16 @@
+[
+{
+  "modid": "playtracker",
+  "name": "Playtime Tracker",
+  "description": "Tracks playtime",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["mrkirby153"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
