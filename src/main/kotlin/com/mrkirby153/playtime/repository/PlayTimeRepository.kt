@@ -67,6 +67,7 @@ class PlayTimeRepository {
                 playtime.sessions.add(session)
             }
             repo[uuid] = playtime
+            inputStream.close()
         }
     }
 
