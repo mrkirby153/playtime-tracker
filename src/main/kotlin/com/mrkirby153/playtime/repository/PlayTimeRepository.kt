@@ -12,7 +12,7 @@ import java.util.*
 
 class PlayTimeRepository {
 
-    private val repo = mutableMapOf<UUID, PlayTime>()
+    val repo = mutableMapOf<UUID, PlayTime>()
 
     private val dataDirectory = File(DimensionManager.getCurrentSaveRootDirectory(), "playtime")
 
@@ -53,21 +53,27 @@ class PlayTimeRepository {
     fun load() {
         repo.clear()
         dataDirectory.listFiles().forEach {
-            val uuid = UUID.fromString(it.nameWithoutExtension)
-            val parser = JsonParser()
-            val inputStream = it.reader(Charset.defaultCharset())
-            val array = parser.parse(inputStream).asJsonArray
+            if(it.nameWithoutExtension == "uuidMaps")
+                return@forEach
+            try {
+                val uuid = UUID.fromString(it.nameWithoutExtension)
+                val parser = JsonParser()
+                val inputStream = it.reader(Charset.defaultCharset())
+                val array = parser.parse(inputStream).asJsonArray
 
-            val playtime = PlayTime(uuid)
+                val playtime = PlayTime(uuid)
 
-            array.map { it.asJsonObject }.forEach {
-                val id = it.get("id").asString
-                PlaytimeTracker.instance.logger.info("Loading session $id")
-                val session = Session(id, it.get("login").asLong, it.get("logout").asLong)
-                playtime.sessions.add(session)
+                array.map { it.asJsonObject }.forEach {
+                    val id = it.get("id").asString
+                    PlaytimeTracker.instance.logger.info("Loading session $id")
+                    val session = Session(id, it.get("login").asLong, it.get("logout").asLong)
+                    playtime.sessions.add(session)
+                }
+                repo[uuid] = playtime
+                inputStream.close()
+            } catch(e: IllegalArgumentException){
+                // Ignore
             }
-            repo[uuid] = playtime
-            inputStream.close()
         }
     }
 

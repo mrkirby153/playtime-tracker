@@ -1,11 +1,14 @@
 package com.mrkirby153.playtime
 
+import com.mrkirby153.playtime.command.CommandPlayTime
 import com.mrkirby153.playtime.listener.EventListener
 import com.mrkirby153.playtime.repository.PlayTimeRepository
+import com.mrkirby153.playtime.repository.UsernameRepository
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.event.FMLInitializationEvent
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent
 import net.minecraftforge.fml.relauncher.Side
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -18,6 +21,8 @@ class PlaytimeTracker {
 
     val repository = PlayTimeRepository()
 
+    val usernameRepo = UsernameRepository()
+
     @Mod.EventHandler
     fun preInit(event: FMLPreInitializationEvent) {
         logger.info("Calling pre-init")
@@ -29,9 +34,17 @@ class PlaytimeTracker {
             logger.info("Calling init")
             MinecraftForge.EVENT_BUS.register(EventListener)
             repository.load()
+            usernameRepo.load()
         } else {
             logger.info("Skipping init. Wrong side")
         }
+    }
+
+    @Mod.EventHandler
+    fun serverStart(event: FMLServerStartingEvent) {
+        if (event.side != Side.SERVER)
+            return
+        event.registerServerCommand(CommandPlayTime())
     }
 
 

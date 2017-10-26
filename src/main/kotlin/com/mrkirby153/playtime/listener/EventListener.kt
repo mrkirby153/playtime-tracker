@@ -10,6 +10,7 @@ object EventListener {
     @SubscribeEvent
     fun onJoin(event: PlayerEvent.PlayerLoggedInEvent) {
         PlaytimeTracker.instance.repository.get(event.player).startNewSession()
+        PlaytimeTracker.instance.usernameRepo.update(event.player)
     }
 
     @SubscribeEvent

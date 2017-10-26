@@ -3,7 +3,7 @@ package com.mrkirby153.playtime.repository
 import com.mrkirby153.playtime.PlaytimeTracker
 import java.util.*
 
-class PlayTime(val player: UUID) {
+class PlayTime(val player: UUID) : Comparable<PlayTime> {
     val sessions = mutableListOf<Session>()
 
     var currentSession: Session? = null
@@ -27,11 +27,18 @@ class PlayTime(val player: UUID) {
 
     fun getTotalPlaytime(): Long {
         var time = 0L
+        currentSession?.let {
+            time += it.duration
+        }
         sessions.forEach {
             time += it.duration
         }
         return time
     }
+    override fun compareTo(other: PlayTime): Int {
+        return other.getTotalPlaytime().compareTo(getTotalPlaytime())
+    }
+
 }
 
 
