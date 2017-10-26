@@ -9,16 +9,17 @@ object EventListener {
 
     @SubscribeEvent
     fun onJoin(event: PlayerEvent.PlayerLoggedInEvent) {
-
+        PlaytimeTracker.instance.repository.get(event.player).startNewSession()
     }
 
     @SubscribeEvent
     fun onQuit(event: PlayerEvent.PlayerLoggedOutEvent) {
-
+        PlaytimeTracker.instance.repository.get(event.player).endCurrentSession()
+        PlaytimeTracker.instance.repository.save(event.player.uniqueID)
     }
 
     @SubscribeEvent
-    fun onSave(event: WorldEvent.Save){
+    fun onSave(event: WorldEvent.Save) {
         PlaytimeTracker.instance.repository.save()
     }
 }

@@ -24,20 +24,30 @@ class PlayTimeRepository {
 
     fun save() {
         repo.forEach {
-            val dataFile = File(dataDirectory, "${it.key}.json")
-            val jsonArray = JsonArray()
-            if (!dataFile.exists())
-                dataFile.createNewFile()
-            val sessions = it.value.sessions
-            sessions.forEach {
-                jsonArray.add(JsonObject().apply {
-                    addProperty("login", it.login)
-                    addProperty("logout", it.logout)
-                    addProperty("id", it.id)
-                })
-            }
-            dataFile.writeText(jsonArray.toString())
+            save(it.key, it.value)
         }
+    }
+
+    fun save(uuid: UUID) {
+        repo[uuid]?.let {
+            save(uuid, it)
+        }
+    }
+
+    fun save(uuid: UUID, playtime: PlayTime) {
+        val dataFile = File(dataDirectory, "$uuid.json")
+        val jsonArray = JsonArray()
+        if (!dataFile.exists())
+            dataFile.createNewFile()
+        val sessions = playtime.sessions
+        sessions.forEach {
+            jsonArray.add(JsonObject().apply {
+                addProperty("login", it.login)
+                addProperty("logout", it.logout)
+                addProperty("id", it.id)
+            })
+        }
+        dataFile.writeText(jsonArray.toString())
     }
 
     fun load() {
