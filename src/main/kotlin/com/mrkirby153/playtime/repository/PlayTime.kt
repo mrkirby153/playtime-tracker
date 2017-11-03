@@ -11,14 +11,14 @@ class PlayTime(val player: UUID) : Comparable<PlayTime> {
 
     fun startNewSession() {
         if (currentSession != null) {
-            throw IllegalStateException("Attempting to start a new session while one is already active!")
+            PlaytimeTracker.instance.logger.warn("Attempting to start a new session while one is already active for $player")
         }
         currentSession = Session(PlaytimeTracker.instance.generateId(10), System.currentTimeMillis(), -1)
     }
 
     fun endCurrentSession() {
         if (currentSession == null)
-            throw IllegalStateException("Attempting to end a session when one hasn't started!")
+            PlaytimeTracker.instance.logger.warn("Attempting to end a session when one hasn't started for $player")
         currentSession?.logout = System.currentTimeMillis()
         if (currentSession != null)
             sessions.add(currentSession!!)
@@ -35,6 +35,7 @@ class PlayTime(val player: UUID) : Comparable<PlayTime> {
         }
         return time
     }
+
     override fun compareTo(other: PlayTime): Int {
         return other.getTotalPlaytime().compareTo(getTotalPlaytime())
     }
