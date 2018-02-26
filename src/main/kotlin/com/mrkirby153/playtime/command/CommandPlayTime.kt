@@ -11,12 +11,18 @@ import net.minecraft.util.text.TextComponentString
 import net.minecraft.util.text.TextFormatting
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
-import java.util.*
-import kotlin.collections.LinkedHashMap
+import java.util.Collections
+import java.util.LinkedList
+import java.util.Locale
+import java.util.UUID
 
 class CommandPlayTime : CommandBase() {
-    override fun getName(): String {
+    override fun getCommandName(): String {
         return "playtime"
+    }
+
+    override fun getCommandUsage(sender: ICommandSender?): String {
+        return "/playtime"
     }
 
     override fun execute(server: MinecraftServer, sender: ICommandSender, args: Array<out String>) {
@@ -39,7 +45,9 @@ class CommandPlayTime : CommandBase() {
                     if (k == sender.uniqueID)
                         displayed = true
                 }
-                sender.sendMessage(TextComponentString("#${num++}: ${PlaytimeTracker.instance.usernameRepo.getName(k)} - ${Time.format(1, v, Time.TimeUnit.FIT)}"))
+                sender.addChatMessage(TextComponentString(
+                        "#${num++}: ${PlaytimeTracker.instance.usernameRepo.getName(
+                                k)} - ${Time.format(1, v, Time.TimeUnit.FIT)}"))
             }
             var place = 1
             sorted.forEach { k, _ ->
@@ -51,14 +59,16 @@ class CommandPlayTime : CommandBase() {
                 }
             }
             if (sender is EntityPlayer && !displayed) {
-                sender.sendMessage(TextComponentString(""))
-                sender.sendMessage(TextComponentString("#$place: ${sender.name} = ${Time.format(1, playTimes[sender.uniqueID]!!, Time.TimeUnit.FIT)}"))
+                sender.addChatMessage(TextComponentString(""))
+                sender.addChatComponentMessage(TextComponentString(
+                        "#$place: ${sender.name} = ${Time.format(1, playTimes[sender.uniqueID]!!,
+                                Time.TimeUnit.FIT)}"))
             }
         } else if (args.size == 1) {
             val user = args[0]
             val uuid = PlaytimeTracker.instance.usernameRepo.getUUID(user)
             if (uuid == null) {
-                sender.sendMessage(TextComponentString("That user does not exist!").apply {
+                sender.addChatMessage(TextComponentString("That user does not exist!").apply {
                     style = Style().apply { color = TextFormatting.RED }
                 })
                 return
@@ -86,21 +96,21 @@ class CommandPlayTime : CommandBase() {
             }
             sd = Math.sqrt(sd)
 
-            sender.sendMessage(TextComponentString("Playtime for $user").apply {
+            sender.addChatMessage(TextComponentString("Playtime for $user").apply {
                 style = Style().apply { color = TextFormatting.GREEN }
             })
 
-            sender.sendMessage(TextComponentString("Time Played: ${Time.format(1, playTime.getTotalPlaytime(), Time.TimeUnit.FIT)}"))
-            sender.sendMessage(TextComponentString("Average Time Played: ${Time.format(1, average.toLong(), Time.TimeUnit.FIT)}"))
-            sender.sendMessage(TextComponentString("Std. Dev: ${formatDouble(sd)}"))
+            sender.addChatMessage(TextComponentString(
+                    "Time Played: ${Time.format(1, playTime.getTotalPlaytime(),
+                            Time.TimeUnit.FIT)}"))
+            sender.addChatMessage(TextComponentString(
+                    "Average Time Played: ${Time.format(1, average.toLong(), Time.TimeUnit.FIT)}"))
+            sender.addChatMessage(TextComponentString("Std. Dev: ${formatDouble(sd)}"))
         }
     }
 
-    override fun getUsage(sender: ICommandSender?): String {
-        return "/playtime"
-    }
-
-    fun formatDouble(double: Double): Double = DecimalFormat("#.##", DecimalFormatSymbols(Locale.US)).format(double).toDouble()
+    fun formatDouble(double: Double): Double = DecimalFormat("#.##",
+            DecimalFormatSymbols(Locale.US)).format(double).toDouble()
 
     fun <K, V : Comparable<V>> sortByValue(map: Map<K, V>): Map<K, V> {
         val list = LinkedList<Map.Entry<K, V>>(map.entries)

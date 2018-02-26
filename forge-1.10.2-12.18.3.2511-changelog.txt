@@ -1,17 +1,5 @@
 Changelog:
-Build 2515:
-	bs2609: Fix some more test mod warnings (#4469)
-
-Build 1.12.2-14.23.0.2514:
-	mincrmatt12: [1.12.x] [Animation API] Add rotation origin variable (#4466)
-
-Build 1.11.2-13.20.1.2513:
-	bs2609: Save/restore dormant chunk entity data from NBT (#3940)
-
-Build 1.12.2-14.23.0.2512:
-	bs2609: Fix some warnings produced by test mods (#4456)
-
-Build 1.10.2-12.18.3.2511:
+Build 2511:
 	mezz: Fix performance regression in FastTESR rendering
 
 Build 1.11.2-13.20.1.2510:
