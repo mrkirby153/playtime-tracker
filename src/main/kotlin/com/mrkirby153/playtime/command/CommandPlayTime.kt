@@ -1,7 +1,7 @@
 package com.mrkirby153.playtime.command
 
 import com.mrkirby153.playtime.PlaytimeTracker
-import com.mrkirby153.playtime.Time
+import me.mrkirby153.kcutils.Time
 import net.minecraft.command.CommandBase
 import net.minecraft.command.ICommandSender
 import net.minecraft.entity.player.EntityPlayer
@@ -39,7 +39,7 @@ class CommandPlayTime : CommandBase() {
                     if (k == sender.uniqueID)
                         displayed = true
                 }
-                sender.sendMessage(TextComponentString("#${num++}: ${PlaytimeTracker.instance.usernameRepo.getName(k)} - ${Time.format(1, v, Time.TimeUnit.FIT)}"))
+                sender.sendMessage(TextComponentString("#${num++}: ${PlaytimeTracker.instance.usernameRepo.getName(k)} - ${Time.formatLong(v)}"))
             }
             var place = 1
             sorted.forEach { k, _ ->
@@ -52,7 +52,7 @@ class CommandPlayTime : CommandBase() {
             }
             if (sender is EntityPlayer && !displayed) {
                 sender.sendMessage(TextComponentString(""))
-                sender.sendMessage(TextComponentString("#$place: ${sender.name} = ${Time.format(1, playTimes[sender.uniqueID]!!, Time.TimeUnit.FIT)}"))
+                sender.sendMessage(TextComponentString("#$place: ${sender.name} = ${Time.formatLong(playTimes[sender.uniqueID]!!)}"))
             }
         } else if (args.size == 1) {
             val user = args[0]
@@ -90,8 +90,10 @@ class CommandPlayTime : CommandBase() {
                 style = Style().apply { color = TextFormatting.GREEN }
             })
 
-            sender.sendMessage(TextComponentString("Time Played: ${Time.format(1, playTime.getTotalPlaytime(), Time.TimeUnit.FIT)}"))
-            sender.sendMessage(TextComponentString("Average Time Played: ${Time.format(1, average.toLong(), Time.TimeUnit.FIT)}"))
+            sender.sendMessage(TextComponentString(
+                    "Time Played: ${Time.formatLong(playTime.getTotalPlaytime())}"))
+            sender.sendMessage(TextComponentString(
+                    "Average Time Played: ${Time.formatLong(average.toLong())}"))
             sender.sendMessage(TextComponentString("Std. Dev: ${formatDouble(sd)}"))
         }
     }

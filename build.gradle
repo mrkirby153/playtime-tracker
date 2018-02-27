@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.1.51'
+    ext.kotlin_version = '1.2.21'
     repositories {
         jcenter()
         maven { url = "http://files.minecraftforge.net/maven" }
@@ -18,15 +18,21 @@ version = "1.0"
 group = "com.mrkirby153" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "playtime-tracker"
 
-sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+repositories {
+    maven {
+        name 'Kirby'
+        url 'https://repo.mrkirby153.com/repository/maven-public/'
+    }
+}
+sourceCompatibility = targetCompatibility = "1.8" // Need this here so eclipse task generates correctly.
 compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
+    sourceCompatibility = targetCompatibility = "1.8"
 }
 
 minecraft {
     version = "1.12.2-14.23.0.2515"
     runDir = "run"
-    
+
     // the mappings can be changed at any time, and must be in the following format.
     // snapshot_YYYYMMDD   snapshot are built nightly.
     // stable_#            stables are built at the discretion of the MCP team.
@@ -36,13 +42,19 @@ minecraft {
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
+configurations {
+    shade
+    compile.extendsFrom shade
+}
+
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    shade "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    shade "me.mrkirby153:KirbyUtils-Common:2.4-SNAPSHOT"
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
     //compile "some.group:artifact:version"
-      
+
     // real examples
     //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
     //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
@@ -73,10 +85,26 @@ processResources {
         // replace version and mcversion
         expand 'version':project.version, 'mcversion':project.minecraft.version
     }
-        
-    // copy everything else except the mcmod.info
+
+    // copy everything else, thats not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
+    }
+}
+
+jar {
+    configurations.shade.forEach { dep ->
+        from(project.zipTree(dep)){
+            exclude 'META-INF', 'META-INF/**'
+        }
+    }
+}
+
+reobf {
+    jar {
+        extraLines += ["PK: kotlin com/mrkirby153/playtime/repack/kotlin"]
+        extraLines += ["PK: org/jetbrains/annotations com/mrkirby153/playtime/repack/annotations"]
+        extraLines += ["PK: me/mrkirby153/kcutils com/mrkirby153/playtime/repack/kcutils"]
     }
 }
 repositories {
