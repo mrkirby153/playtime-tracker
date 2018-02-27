@@ -1,7 +1,7 @@
 package com.mrkirby153.playtime.command
 
 import com.mrkirby153.playtime.PlaytimeTracker
-import com.mrkirby153.playtime.Time
+import me.mrkirby153.kcutils.Time
 import net.minecraft.command.CommandBase
 import net.minecraft.command.ICommandSender
 import net.minecraft.entity.player.EntityPlayer
@@ -47,7 +47,7 @@ class CommandPlayTime : CommandBase() {
                 }
                 sender.addChatMessage(TextComponentString(
                         "#${num++}: ${PlaytimeTracker.instance.usernameRepo.getName(
-                                k)} - ${Time.format(1, v, Time.TimeUnit.FIT)}"))
+                                k)} - ${Time.formatLong(v)}"))
             }
             var place = 1
             sorted.forEach { k, _ ->
@@ -61,8 +61,7 @@ class CommandPlayTime : CommandBase() {
             if (sender is EntityPlayer && !displayed) {
                 sender.addChatMessage(TextComponentString(""))
                 sender.addChatComponentMessage(TextComponentString(
-                        "#$place: ${sender.name} = ${Time.format(1, playTimes[sender.uniqueID]!!,
-                                Time.TimeUnit.FIT)}"))
+                        "#$place: ${sender.name} = ${Time.formatLong(playTimes[sender.uniqueID]!!)}"))
             }
         } else if (args.size == 1) {
             val user = args[0]
@@ -101,10 +100,9 @@ class CommandPlayTime : CommandBase() {
             })
 
             sender.addChatMessage(TextComponentString(
-                    "Time Played: ${Time.format(1, playTime.getTotalPlaytime(),
-                            Time.TimeUnit.FIT)}"))
+                    "Time Played: ${Time.formatLong(playTime.getTotalPlaytime())}"))
             sender.addChatMessage(TextComponentString(
-                    "Average Time Played: ${Time.format(1, average.toLong(), Time.TimeUnit.FIT)}"))
+                    "Average Time Played: ${Time.formatLong(average.toLong())}"))
             sender.addChatMessage(TextComponentString("Std. Dev: ${formatDouble(sd)}"))
         }
     }

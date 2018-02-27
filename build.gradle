@@ -20,8 +20,8 @@ archivesBaseName = "playtime-tracker"
 
 repositories {
     maven {
-        name 'Tethys'
-        url 'http://tethys.drakon.io/maven'
+        name 'Kirby'
+        url 'https://repo.mrkirby153.com/repository/maven-public/'
     }
 }
 sourceCompatibility = targetCompatibility = "1.8" // Need this here so eclipse task generates correctly.
@@ -49,6 +49,7 @@ configurations {
 
 dependencies {
     shade "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    shade "me.mrkirby153:KirbyUtils-Common:2.4-SNAPSHOT"
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
@@ -103,6 +104,7 @@ reobf {
     jar {
         extraLines += ["PK: kotlin com/mrkirby153/playtime/repack/kotlin"]
         extraLines += ["PK: org/jetbrains/annotations com/mrkirby153/playtime/repack/annotations"]
+        extraLines += ["PK: me/mrkirby153/kcutils com/mrkirby153/playtime/repack/kcutils"]
     }
 }
 repositories {
