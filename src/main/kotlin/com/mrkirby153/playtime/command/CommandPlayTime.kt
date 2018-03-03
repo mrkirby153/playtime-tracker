@@ -92,8 +92,9 @@ class CommandPlayTime : CommandBase() {
 
             sender.sendMessage(TextComponentString(
                     "Time Played: ${Time.formatLong(playTime.getTotalPlaytime())}"))
-            sender.sendMessage(TextComponentString(
-                    "Average Time Played: ${Time.formatLong(average.toLong())}"))
+
+            sender.sendMessage(TextComponentString("Current Session: ${Time.formatLong(playTime.getCurrentPlaytime())}"))
+            sender.sendMessage(TextComponentString("Average Time Played: ${Time.formatLong(average.toLong())}"))
             sender.sendMessage(TextComponentString("Std. Dev: ${formatDouble(sd)}"))
         }
     }

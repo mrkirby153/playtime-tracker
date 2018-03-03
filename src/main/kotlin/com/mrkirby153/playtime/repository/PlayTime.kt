@@ -1,7 +1,7 @@
 package com.mrkirby153.playtime.repository
 
 import com.mrkirby153.playtime.PlaytimeTracker
-import java.util.*
+import java.util.UUID
 
 class PlayTime(val player: UUID) : Comparable<PlayTime> {
     val sessions = mutableListOf<Session>()
@@ -34,6 +34,12 @@ class PlayTime(val player: UUID) : Comparable<PlayTime> {
             time += it.duration
         }
         return time
+    }
+
+    fun getCurrentPlaytime(): Long {
+        if(currentSession == null)
+            return -1
+        return System.currentTimeMillis() - currentSession!!.login
     }
 
     override fun compareTo(other: PlayTime): Int {
