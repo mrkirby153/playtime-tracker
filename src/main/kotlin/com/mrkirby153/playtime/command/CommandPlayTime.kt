@@ -101,6 +101,7 @@ class CommandPlayTime : CommandBase() {
 
             sender.addChatMessage(TextComponentString(
                     "Time Played: ${Time.formatLong(playTime.getTotalPlaytime())}"))
+            sender.addChatMessage(TextComponentString("Current Session: ${Time.formatLong(playTime.getCurrentPlaytime())}"))
             sender.addChatMessage(TextComponentString(
                     "Average Time Played: ${Time.formatLong(average.toLong())}"))
             sender.addChatMessage(TextComponentString("Std. Dev: ${formatDouble(sd)}"))
