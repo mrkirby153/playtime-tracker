@@ -52,7 +52,8 @@ class CommandPlayTime : CommandBase() {
             }
             if (sender is EntityPlayer && !displayed) {
                 sender.sendMessage(TextComponentString(""))
-                sender.sendMessage(TextComponentString("#$place: ${sender.name} = ${Time.formatLong(playTimes[sender.uniqueID]!!)}"))
+                val time = playTimes[sender.uniqueID]
+                sender.sendMessage(TextComponentString("#$place: ${sender.name} = ${if (time != null) Time.formatLong(time) else "Unknown"}"))
             }
         } else if (args.size == 1) {
             val user = args[0]
