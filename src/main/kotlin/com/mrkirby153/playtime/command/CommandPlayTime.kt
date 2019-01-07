@@ -6,13 +6,16 @@ import net.minecraft.command.CommandBase
 import net.minecraft.command.ICommandSender
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.server.MinecraftServer
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.text.Style
 import net.minecraft.util.text.TextComponentString
 import net.minecraft.util.text.TextFormatting
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
-import java.util.*
-import kotlin.collections.LinkedHashMap
+import java.util.Comparator
+import java.util.LinkedList
+import java.util.Locale
+import java.util.UUID
 
 class CommandPlayTime : CommandBase() {
     override fun getName(): String {
@@ -81,22 +84,15 @@ class CommandPlayTime : CommandBase() {
             }
             average /= sessionCount
 
-            var sd = 0.0
-            sessions.forEach {
-                sd += Math.pow((it.duration) / -average, 2.0) / sessionCount
-            }
-            sd = Math.sqrt(sd)
-
             sender.sendMessage(TextComponentString("Playtime for $user").apply {
                 style = Style().apply { color = TextFormatting.GREEN }
             })
 
             sender.sendMessage(TextComponentString(
-                    "Time Played: ${Time.formatLong(playTime.getTotalPlaytime())}"))
+                    "Time Played: ${Time.formatLong(playTime.getTotalPlaytime())} over $sessionCount sessions"))
 
             sender.sendMessage(TextComponentString("Current Session: ${Time.formatLong(playTime.getCurrentPlaytime())}"))
             sender.sendMessage(TextComponentString("Average Time Played: ${Time.formatLong(average.toLong())}"))
-            sender.sendMessage(TextComponentString("Std. Dev: ${formatDouble(sd)}"))
         }
     }
 
@@ -109,9 +105,9 @@ class CommandPlayTime : CommandBase() {
     fun <K, V : Comparable<V>> sortByValue(map: Map<K, V>): Map<K, V> {
         val list = LinkedList<Map.Entry<K, V>>(map.entries)
 
-        Collections.sort(list) { o1, o2 ->
+        list.sortWith(Comparator { o1, o2 ->
             o2.value.compareTo(o1.value)
-        }
+        })
 
         val sortedMap = LinkedHashMap<K, V>()
 
@@ -125,5 +121,8 @@ class CommandPlayTime : CommandBase() {
         return true
     }
 
-
+    override fun getTabCompletions(server: MinecraftServer, sender: ICommandSender,
+                                   args: Array<String>, targetPos: BlockPos?): MutableList<String> {
+        return PlaytimeTracker.instance.usernameRepo.repo.values.toMutableList()
+    }
 }
