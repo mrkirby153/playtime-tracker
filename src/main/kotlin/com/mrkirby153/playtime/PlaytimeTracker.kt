@@ -12,16 +12,15 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent
 import net.minecraftforge.fml.relauncher.Side
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import java.util.*
+import java.util.Random
 
 @Mod(modid = Constants.MODID, version = Constants.VERSION, name = Constants.NAME, acceptableRemoteVersions = "*")
 class PlaytimeTracker {
 
     val logger: Logger = LogManager.getLogger(Constants.MODID)
 
-    val repository = PlayTimeRepository()
-
-    val usernameRepo = UsernameRepository()
+    lateinit var repository: PlayTimeRepository
+    lateinit var usernameRepo: UsernameRepository
 
     @Mod.EventHandler
     fun preInit(event: FMLPreInitializationEvent) {
@@ -33,8 +32,6 @@ class PlaytimeTracker {
         if (event.side == Side.SERVER) {
             logger.info("Calling init")
             MinecraftForge.EVENT_BUS.register(EventListener)
-            repository.load()
-            usernameRepo.load()
         } else {
             logger.info("Skipping init. Wrong side")
         }
@@ -45,6 +42,10 @@ class PlaytimeTracker {
         if (event.side != Side.SERVER)
             return
         event.registerServerCommand(CommandPlayTime())
+        this.repository = PlayTimeRepository()
+        this.usernameRepo = UsernameRepository()
+        repository.load()
+        usernameRepo.load()
     }
 
 

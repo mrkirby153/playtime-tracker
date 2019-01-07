@@ -8,7 +8,7 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraftforge.common.DimensionManager
 import java.io.File
 import java.nio.charset.Charset
-import java.util.*
+import java.util.UUID
 
 class PlayTimeRepository {
 

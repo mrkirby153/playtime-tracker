@@ -6,13 +6,18 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraftforge.common.DimensionManager
 import java.io.File
 import java.nio.charset.Charset
-import java.util.*
+import java.util.UUID
 
 class UsernameRepository {
 
     private val dataDirectory = File(DimensionManager.getCurrentSaveRootDirectory(), "playtime")
 
     val repo = mutableMapOf<UUID, String>()
+
+    init {
+        if(!dataDirectory.exists())
+            dataDirectory.mkdirs()
+    }
 
     fun update(player: EntityPlayer) {
         repo.put(player.uniqueID, player.name)
