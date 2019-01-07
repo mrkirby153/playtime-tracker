@@ -16,7 +16,6 @@ object EventListener {
     @SubscribeEvent
     fun onQuit(event: PlayerEvent.PlayerLoggedOutEvent) {
         PlaytimeTracker.instance.repository.get(event.player).endCurrentSession()
-        PlaytimeTracker.instance.repository.save(event.player.uniqueID)
     }
 
     @SubscribeEvent

@@ -39,42 +39,52 @@ class PlayTimeRepository {
         val jsonArray = JsonArray()
         if (!dataFile.exists())
             dataFile.createNewFile()
-        val sessions = playtime.sessions
-        sessions.forEach {
+        val obj = JsonObject()
+        val currentSession = playtime.currentSession
+        obj.add("current", if (currentSession != null) JsonObject().apply {
+            currentSession.toJson(this)
+        } else null)
+        playtime.sessions.forEach {
             jsonArray.add(JsonObject().apply {
-                addProperty("login", it.login)
-                addProperty("logout", it.logout)
-                addProperty("id", it.id)
+                it.toJson(this)
             })
         }
-        dataFile.writeText(jsonArray.toString())
+        obj.add("sessions", jsonArray)
+        dataFile.writeText(obj.toString())
     }
 
     fun load() {
+        PlaytimeTracker.instance.logger.info("Loading playtime repository")
         repo.clear()
-        dataDirectory.listFiles().forEach {
-            if(it.nameWithoutExtension == "uuidMaps")
+        dataDirectory.listFiles().forEach { file ->
+            if (file.nameWithoutExtension == "uuidMaps")
                 return@forEach
             try {
-                val uuid = UUID.fromString(it.nameWithoutExtension)
+                val uuid = UUID.fromString(file.nameWithoutExtension)
                 val parser = JsonParser()
-                val inputStream = it.reader(Charset.defaultCharset())
-                val array = parser.parse(inputStream).asJsonArray
-
+                val inputStream = file.reader(Charset.defaultCharset())
+                val obj = parser.parse(inputStream).asJsonObject
                 val playtime = PlayTime(uuid)
 
-                array.map { it.asJsonObject }.forEach {
-                    val id = it.get("id").asString
-                    PlaytimeTracker.instance.logger.info("Loading session $id")
-                    val session = Session(id, it.get("login").asLong, it.get("logout").asLong)
-                    playtime.sessions.add(session)
+                val cur = obj.get("current").asJsonObject
+                playtime.currentSession = if (cur != null) deserializeSession(cur) else null
+                obj.get("sessions").asJsonArray.map { it.asJsonObject }.forEach { sessionJson ->
+                    playtime.sessions.add(deserializeSession(sessionJson))
                 }
                 repo[uuid] = playtime
                 inputStream.close()
-            } catch(e: IllegalArgumentException){
+            } catch (e: IllegalArgumentException) {
                 // Ignore
             }
         }
+    }
+
+    fun discardActiveSessions() {
+        PlaytimeTracker.instance.logger.info("Discarding active sessions")
+        this.repo.values.forEach {
+            it.currentSession = null
+        }
+        save()
     }
 
     fun get(player: EntityPlayer): PlayTime {
@@ -83,4 +93,7 @@ class PlayTimeRepository {
         }
         return repo[player.uniqueID]!!
     }
+
+    private fun deserializeSession(obj: JsonObject) = Session(obj.get("id").asString,
+            obj.get("login").asLong, obj.get("logout").asLong)
 }
