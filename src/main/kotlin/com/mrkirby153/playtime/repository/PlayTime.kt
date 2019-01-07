@@ -9,22 +9,27 @@ class PlayTime(val player: UUID) : Comparable<PlayTime> {
     val sessions = mutableListOf<Session>()
 
     var currentSession: Session? = null
+    var sessionHeartbeat: Long = 0
 
 
     fun startNewSession() {
         if (currentSession != null) {
             PlaytimeTracker.instance.logger.warn(
-                    "Attempting to start a new session while one is already active for $player")
+                    "Attempting to start a new session while one is already active for $player. Using previous session")
+            return
         }
         currentSession = Session(PlaytimeTracker.instance.generateId(10),
                 System.currentTimeMillis(), -1)
+        sessionHeartbeat = System.currentTimeMillis()
         PlaytimeTracker.instance.repository.save(player)
     }
 
     fun endCurrentSession() {
-        if (currentSession == null)
+        if (currentSession == null) {
             PlaytimeTracker.instance.logger.warn(
-                    "Attempting to end a session when one hasn't started for $player")
+                    "Attempting to end a session when one hasn't started for $player ignoring")
+            return
+        }
         currentSession?.logout = System.currentTimeMillis()
         if (currentSession != null)
             sessions.add(currentSession!!)

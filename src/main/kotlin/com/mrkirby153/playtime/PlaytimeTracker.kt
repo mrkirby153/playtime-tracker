@@ -45,7 +45,7 @@ class PlaytimeTracker {
         this.repository = PlayTimeRepository()
         this.usernameRepo = UsernameRepository()
         repository.load()
-        repository.discardActiveSessions()
+//        repository.discardActiveSessions()
         usernameRepo.load()
     }
 

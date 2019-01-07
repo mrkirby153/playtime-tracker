@@ -9,6 +9,7 @@ import net.minecraftforge.common.DimensionManager
 import java.io.File
 import java.nio.charset.Charset
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 class PlayTimeRepository {
 
@@ -43,6 +44,7 @@ class PlayTimeRepository {
         val currentSession = playtime.currentSession
         obj.add("current", if (currentSession != null) JsonObject().apply {
             currentSession.toJson(this)
+            addProperty("heartbeat", playtime.sessionHeartbeat)
         } else null)
         playtime.sessions.forEach {
             jsonArray.add(JsonObject().apply {
@@ -66,8 +68,11 @@ class PlayTimeRepository {
                 val obj = parser.parse(inputStream).asJsonObject
                 val playtime = PlayTime(uuid)
 
-                val cur = obj.get("current").asJsonObject
-                playtime.currentSession = if (cur != null) deserializeSession(cur) else null
+                val cur = obj.get("current")
+                if(!cur.isJsonNull) {
+                    playtime.currentSession = deserializeSession(cur.asJsonObject)
+                    playtime.sessionHeartbeat = cur.asJsonObject.get("heartbeat").asLong
+                }
                 obj.get("sessions").asJsonArray.map { it.asJsonObject }.forEach { sessionJson ->
                     playtime.sessions.add(deserializeSession(sessionJson))
                 }
@@ -79,10 +84,14 @@ class PlayTimeRepository {
         }
     }
 
-    fun discardActiveSessions() {
-        PlaytimeTracker.instance.logger.info("Discarding active sessions")
+    fun discardActiveSessions(duration: Long = 5L, period: TimeUnit = TimeUnit.MINUTES) {
+        PlaytimeTracker.instance.logger.info("Discarding stale active sessions")
+        val time = System.currentTimeMillis() - TimeUnit.MILLISECONDS.convert(duration, period)
         this.repo.values.forEach {
-            it.currentSession = null
+            if (it.sessionHeartbeat < time && it.currentSession != null) { // Last heartbeat was too long ago, discard
+                PlaytimeTracker.instance.logger.info("Discarding session for ${it.player} - Heartbeat timeout")
+                it.currentSession = null
+            }
         }
         save()
     }
