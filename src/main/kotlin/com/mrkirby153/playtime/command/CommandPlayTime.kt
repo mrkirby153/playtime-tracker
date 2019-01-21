@@ -123,6 +123,6 @@ class CommandPlayTime : CommandBase() {
 
     override fun getTabCompletions(server: MinecraftServer, sender: ICommandSender,
                                    args: Array<String>, targetPos: BlockPos?): MutableList<String> {
-        return PlaytimeTracker.instance.usernameRepo.repo.values.toMutableList()
+        return if(args.isNotEmpty()) getListOfStringsMatchingLastWord(args, PlaytimeTracker.instance.usernameRepo.repo.values.toList()) else mutableListOf()
     }
 }
