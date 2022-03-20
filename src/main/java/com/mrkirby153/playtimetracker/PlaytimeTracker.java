@@ -1,6 +1,9 @@
 package com.mrkirby153.playtimetracker;
 
+import com.mojang.brigadier.CommandDispatcher;
+import com.mrkirby153.playtimetracker.command.CommandPlayTime;
 import com.mrkirby153.playtimetracker.repository.PlaytimeRepository;
+import net.minecraft.command.CommandSource;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
@@ -21,7 +24,11 @@ public class PlaytimeTracker {
 
     @SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
-        LOGGER.info("Server is starting!");
+        PlaytimeRepository.loadFromServer(event.getServer()).endAllRunningSessions();
+
+        CommandDispatcher<CommandSource> dispatcher = event.getServer().getCommands()
+            .getDispatcher();
+        CommandPlayTime.register(dispatcher);
     }
 
     @SubscribeEvent

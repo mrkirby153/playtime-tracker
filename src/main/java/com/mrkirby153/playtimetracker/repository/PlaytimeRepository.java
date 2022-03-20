@@ -16,14 +16,17 @@ public class PlaytimeRepository {
         loadFromOverworld(world).stop(player);
     }
 
-    private static PlaytimeData loadFromOverworld(World world) {
+    public static PlaytimeData loadFromServer(MinecraftServer server) {
+        ServerWorld overworld = server.overworld();
+        DimensionSavedDataManager dataManager = overworld.getDataStorage();
+        return dataManager.computeIfAbsent(PlaytimeData::new, PlaytimeData.ID);
+    }
+
+    public static PlaytimeData loadFromOverworld(World world) {
         MinecraftServer server = world.getServer();
-        if(server != null) {
-            ServerWorld overworld = world.getServer().overworld();
-            DimensionSavedDataManager dataManager = overworld.getDataStorage();
-            return dataManager.computeIfAbsent(PlaytimeData::new, PlaytimeData.ID);
-        } else {
-            throw new IllegalStateException("World was null");
+        if (server == null) {
+            throw new IllegalArgumentException("Server was null");
         }
+        return loadFromServer(server);
     }
 }

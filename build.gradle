@@ -9,6 +9,10 @@ buildscript {
         classpath 'org.parchmentmc:librarian:1.+'
     }
 }
+plugins {
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.parchmentmc.librarian.forgegradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
@@ -16,7 +20,7 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 version = '1.0'
-group = 'com.mrkirby153.playtime' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group = 'com.mrkirby153.playtimetracker' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'playtimetracker'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 8 to end users, so your mod should target Java 8.
@@ -121,14 +125,19 @@ repositories {
         name 'Kirby'
         url 'https://repo.mrkirby153.com/repository/maven-public/'
     }
+    mavenCentral()
 }
-
+configurations {
+    shade
+    implementation.extendsFrom shade
+}
 dependencies {
     // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
     // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft 'net.minecraftforge:forge:1.16.5-36.2.20'
-    implementation 'me.mrkirby153:KirbyUtils-Common:3.4-SNAPSHOT'
+    shade 'me.mrkirby153:KirbyUtils-Common:3.4-SNAPSHOT'
+    shade 'org.jetbrains.kotlin:kotlin-stdlib-jre8:1.2.71'
 
     // You may put jars on which you depend on in ./libs or you may define them like so..
     // compile "some.group:artifact:version:classifier"
@@ -152,19 +161,32 @@ dependencies {
 
 // Example for how to get properties into the manifest for reading by the runtime..
 jar {
+    archiveClassifier = 'slim'
     manifest {
         attributes([
-            "Specification-Title": "examplemod",
-            "Specification-Vendor": "examplemodsareus",
+            "Specification-Title": "playtimetracker",
+            "Specification-Vendor": "mrkirby153",
             "Specification-Version": "1", // We are version 1 of ourselves
             "Implementation-Title": project.name,
             "Implementation-Version": "${version}",
-            "Implementation-Vendor" :"examplemodsareus",
+            "Implementation-Vendor" :"mrkirby153",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 }
 
+shadowJar {
+    archiveClassifier = ''
+    configurations = [project.configurations.shade]
+    relocate 'me.mrkirby153.kcutils', "${project.group}.relocated.kirbyutils"
+    finalizedBy 'reobfShadowJar'
+}
+artifacts {
+    shadowJar
+}
+reobf {
+    shadowJar {}
+}
 // Example configuration to allow publishing using the maven-publish task
 // This is the preferred method to reobfuscate your jar file
 jar.finalizedBy('reobfJar') 
