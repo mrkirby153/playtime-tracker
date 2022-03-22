@@ -32,6 +32,15 @@ public class CommandPlayTime {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
         dispatcher.register(
             Commands.literal("playtime").requires((source) -> source.hasPermission(0))
+                .executes(sender -> {
+                    CommandSource source = sender.getSource();
+                    if (source.getEntity() instanceof PlayerEntity) {
+                        PlayerEntity entity = (PlayerEntity) source.getEntity();
+                        return showPlaytime(source, entity.getGameProfile());
+                    } else {
+                        return showLeaderboard(source);
+                    }
+                })
                 .then(Commands.literal("get").then(
                     Commands.argument("target", GameProfileArgument.gameProfile())
                         .suggests((sender, suggest) -> {
@@ -43,82 +52,16 @@ public class CommandPlayTime {
                                 List<GameProfile> profiles = new ArrayList<>(
                                     GameProfileArgument.getGameProfiles(sender, "target"));
                                 GameProfile p = profiles.get(0);
-                                CommandSource source = sender.getSource();
-                                List<PlaySession> sessions = PlaytimeRepository.loadFromServer(
-                                    source.getServer()).get(p.getId());
-
-                                Long totalPlayTime = sessions.stream().map(PlaySession::duration)
-                                    .reduce(0L, Long::sum);
-                                float avg = totalPlayTime / (float) sessions.size();
-
-                                source.sendSuccess(new StringTextComponent(
-                                    String.format("Play time for %s", p.getName())), false);
-                                source.sendSuccess(new StringTextComponent(
-                                    String.format("Time Played: %s over %d sessions",
-                                        Time.formatLong(totalPlayTime), sessions.size())), false);
-                                source.sendSuccess(new StringTextComponent(
-                                    String.format("Average Time Played: %s", Time.formatLong(
-                                        (long) avg))), false);
+                                return showPlaytime(sender.getSource(), p);
                             } catch (Exception e) {
                                 sender.getSource()
                                     .sendFailure(new StringTextComponent("Failed: " + e.getMessage()));
                                 return 0;
                             }
-                            return 1;
                         })
                 ))
-                .then(Commands.literal("list").executes(sender -> {
-                    Map<UUID, Long> playtime = new HashMap<>();
-                    PlaytimeData playtimeData = PlaytimeRepository.loadFromServer(
-                        sender.getSource().getServer());
-                    playtimeData.getAll()
-                        .forEach((uuid, playSessions) -> {
-                            playtime.put(uuid,
-                                playSessions.stream().map(PlaySession::duration)
-                                    .reduce(0L, Long::sum));
-                        });
-
-                    LinkedHashMap<UUID, Long> sorted = sortByValue(playtime);
-
-                    AtomicInteger num = new AtomicInteger(1);
-                    boolean displayed = false;
-                    Entity sourceEntity = sender.getSource().getEntity();
-                    for (Map.Entry<UUID, Long> entry : sorted.entrySet()) {
-                        if (num.get() > 5 && sourceEntity instanceof PlayerEntity) {
-                            break;
-                        }
-                        if (sourceEntity instanceof PlayerEntity) {
-                            LOGGER.debug("Player: {} {}", entry.getKey(), sourceEntity.getUUID());
-                            if (entry.getKey().equals(sourceEntity.getUUID())) {
-                                LOGGER.debug("Displayed!");
-                                displayed = true;
-                            }
-                        }
-                        sender.getSource().sendSuccess(
-                            new StringTextComponent(
-                                String.format("#%d: %s - %s", num.getAndIncrement(),
-                                    playtimeData.getUsername(entry.getKey()),
-                                    Time.formatLong(entry.getValue()))), false);
-                    }
-
-                    if (sourceEntity instanceof PlayerEntity && !displayed) {
-                        int place = 1;
-                        for (Map.Entry<UUID, Long> e : sorted.entrySet()) {
-                            if (e.getKey() == sourceEntity.getUUID()) {
-                                break;
-                            }
-                            place++;
-                        }
-                        sender.getSource().sendSuccess(new StringTextComponent(""), false);
-                        long time = sorted.get(sourceEntity.getUUID());
-                        sender.getSource()
-                            .sendSuccess(new StringTextComponent(
-                                    String.format("#%d: %s - %s", place,
-                                        sourceEntity.getName().getString(), Time.formatLong(time))),
-                                false);
-                    }
-                    return 1;
-                })));
+                .then(Commands.literal("list")
+                    .executes(sender -> showLeaderboard(sender.getSource()))));
     }
 
 
@@ -131,5 +74,90 @@ public class CommandPlayTime {
             sorted.put(e.getKey(), e.getValue());
         });
         return sorted;
+    }
+
+    private static int showPlaytime(CommandSource source, GameProfile profile) {
+        List<PlaySession> sessions = PlaytimeRepository.loadFromServer(
+            source.getServer()).get(profile.getId());
+        long totalPlayTime = sessions.stream().map(PlaySession::duration)
+            .reduce(0L, Long::sum);
+        float avg = totalPlayTime / (float) sessions.size();
+
+        source.sendSuccess(new StringTextComponent(
+            String.format("Play time for %s", profile.getName())), false);
+        source.sendSuccess(new StringTextComponent(
+            String.format("Time Played: %s over %d sessions",
+                Time.formatLong(totalPlayTime), sessions.size())), false);
+        source.sendSuccess(new StringTextComponent(
+            String.format("Average Time Played: %s", Time.formatLong(
+                (long) avg))), false);
+        long lastLogout = 0;
+        boolean active = false;
+        for (PlaySession s : sessions) {
+            if (s.isActive()) {
+                active = true;
+                break;
+            }
+            if (s.getEnd() > lastLogout) {
+                lastLogout = s.getEnd();
+            }
+        }
+        String lastSeen = active ? "Online"
+            : String.format("%s ago", Time.formatLong(System.currentTimeMillis() - lastLogout));
+        source.sendSuccess(new StringTextComponent(String.format("Last Seen: %s", lastSeen)),
+            false);
+        return 1;
+    }
+
+    private static int showLeaderboard(CommandSource source) {
+        Map<UUID, Long> playtime = new HashMap<>();
+        PlaytimeData playtimeData = PlaytimeRepository.loadFromServer(
+            source.getServer());
+        playtimeData.getAll()
+            .forEach((uuid, playSessions) -> {
+                playtime.put(uuid,
+                    playSessions.stream().map(PlaySession::duration)
+                        .reduce(0L, Long::sum));
+            });
+
+        LinkedHashMap<UUID, Long> sorted = sortByValue(playtime);
+
+        AtomicInteger num = new AtomicInteger(1);
+        boolean displayed = false;
+        Entity sourceEntity = source.getEntity();
+        for (Map.Entry<UUID, Long> entry : sorted.entrySet()) {
+            if (num.get() > 5 && sourceEntity instanceof PlayerEntity) {
+                break;
+            }
+            if (sourceEntity instanceof PlayerEntity) {
+                LOGGER.debug("Player: {} {}", entry.getKey(), sourceEntity.getUUID());
+                if (entry.getKey().equals(sourceEntity.getUUID())) {
+                    LOGGER.debug("Displayed!");
+                    displayed = true;
+                }
+            }
+            source.sendSuccess(
+                new StringTextComponent(
+                    String.format("#%d: %s - %s", num.getAndIncrement(),
+                        playtimeData.getUsername(entry.getKey()),
+                        Time.formatLong(entry.getValue()))), false);
+        }
+
+        if (sourceEntity instanceof PlayerEntity && !displayed) {
+            int place = 1;
+            for (Map.Entry<UUID, Long> e : sorted.entrySet()) {
+                if (e.getKey() == sourceEntity.getUUID()) {
+                    break;
+                }
+                place++;
+            }
+            source.sendSuccess(new StringTextComponent(""), false);
+            long time = sorted.get(sourceEntity.getUUID());
+            source.sendSuccess(new StringTextComponent(
+                    String.format("#%d: %s - %s", place,
+                        sourceEntity.getName().getString(), Time.formatLong(time))),
+                false);
+        }
+        return 1;
     }
 }
