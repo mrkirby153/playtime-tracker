@@ -19,7 +19,7 @@ apply plugin: 'org.parchmentmc.librarian.forgegradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '1.0.1'
+version = '1.0.2'
 group = 'com.mrkirby153.playtimetracker' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'playtimetracker'
 

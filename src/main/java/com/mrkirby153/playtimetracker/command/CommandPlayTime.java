@@ -93,9 +93,11 @@ public class CommandPlayTime {
                 (long) avg))), false);
         long lastLogout = 0;
         boolean active = false;
+        PlaySession currentSession = null;
         for (PlaySession s : sessions) {
             if (s.isActive()) {
                 active = true;
+                currentSession = s;
                 break;
             }
             if (s.getEnd() > lastLogout) {
@@ -104,8 +106,12 @@ public class CommandPlayTime {
         }
         String lastSeen = active ? "Online"
             : String.format("%s ago", Time.formatLong(System.currentTimeMillis() - lastLogout));
-        source.sendSuccess(new StringTextComponent(String.format("Last Seen: %s", lastSeen)),
-            false);
+        if(active) {
+            source.sendSuccess(new StringTextComponent(String.format("Current Session: %s", Time.formatLong(currentSession.duration()))), false);
+        } else {
+            source.sendSuccess(new StringTextComponent(String.format("Last Seen: %s", lastSeen)),
+                false);
+        }
         return 1;
     }
 
